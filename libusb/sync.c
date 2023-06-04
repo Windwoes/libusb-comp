@@ -48,7 +48,7 @@ static void sync_transfer_wait_for_completion(struct libusb_transfer *transfer)
 
 	while (!*completed) {
 		r = libusb_handle_events_completed(ctx, completed);
-		if (r < 0) {
+		if (UNLIKELY(r < 0)) {
 			if (r == LIBUSB_ERROR_INTERRUPTED)
 				continue;
 			usbi_err(ctx, "libusb_handle_events failed: %s, cancelling transfer and retrying",
@@ -96,17 +96,16 @@ int API_EXPORTED libusb_control_transfer(libusb_device_handle *dev_handle,
 	int completed = 0;
 	int r;
 
-	if (!transfer)
+	if (UNLIKELY(!transfer))
 		return LIBUSB_ERROR_NO_MEM;
 
 	buffer = (unsigned char*) malloc(LIBUSB_CONTROL_SETUP_SIZE + wLength);
-	if (!buffer) {
+	if (UNLIKELY(!buffer)) {
 		libusb_free_transfer(transfer);
 		return LIBUSB_ERROR_NO_MEM;
 	}
 
-	libusb_fill_control_setup(buffer, bmRequestType, bRequest, wValue, wIndex,
-		wLength);
+	libusb_fill_control_setup(buffer, bmRequestType, bRequest, wValue, wIndex, wLength);
 	if ((bmRequestType & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT)
 		memcpy(buffer + LIBUSB_CONTROL_SETUP_SIZE, data, wLength);
 
@@ -114,7 +113,7 @@ int API_EXPORTED libusb_control_transfer(libusb_device_handle *dev_handle,
 		sync_transfer_cb, &completed, timeout);
 	transfer->flags = LIBUSB_TRANSFER_FREE_BUFFER;
 	r = libusb_submit_transfer(transfer);
-	if (r < 0) {
+	if (UNLIKELY(r < 0)) {
 		libusb_free_transfer(transfer);
 		return r;
 	}
@@ -163,7 +162,7 @@ static int do_sync_bulk_transfer(struct libusb_device_handle *dev_handle,
 	int completed = 0;
 	int r;
 
-	if (!transfer)
+	if (UNLIKELY(!transfer))
 		return LIBUSB_ERROR_NO_MEM;
 
 	libusb_fill_bulk_transfer(transfer, dev_handle, endpoint, buffer, length,
@@ -171,7 +170,7 @@ static int do_sync_bulk_transfer(struct libusb_device_handle *dev_handle,
 	transfer->type = type;
 
 	r = libusb_submit_transfer(transfer);
-	if (r < 0) {
+	if (UNLIKELY(r < 0)) {
 		libusb_free_transfer(transfer);
 		return r;
 	}

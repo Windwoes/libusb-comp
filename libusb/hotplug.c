@@ -228,7 +228,7 @@ int API_EXPORTED libusb_hotplug_register_callback(libusb_context *ctx,
 	USBI_GET_CONTEXT(ctx);
 
 	new_callback = (libusb_hotplug_callback *)calloc(1, sizeof (*new_callback));
-	if (!new_callback) {
+	if (LIKELY(!new_callback)) {
 		return LIBUSB_ERROR_NO_MEM;
 	}
 

@@ -32,12 +32,12 @@ int usbi_pipe(int pipefd[2])
 		return ret;
 	}
 	ret = fcntl(pipefd[1], F_GETFL);
-	if (ret == -1) {
+	if (UNLIKELY(ret == -1)) {
 		usbi_dbg("Failed to get pipe fd flags: %d", errno);
 		goto err_close_pipe;
 	}
 	ret = fcntl(pipefd[1], F_SETFL, ret | O_NONBLOCK);
-	if (ret != 0) {
+	if (UNLIKELY(ret != 0)) {
 		usbi_dbg("Failed to set non-blocking on new pipe: %d", errno);
 		goto err_close_pipe;
 	}
